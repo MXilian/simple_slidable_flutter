@@ -1,9 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:simple_slidable/slide_controller.dart';
 
-/// It is necessary to specify the size of the widget (size parameter in constructor) or flex.
-///
-/// Otherwise, the widget should be wrapped in SizedBox, Expanded, Flexible, or Container to display correctly
 class Slidable extends StatefulWidget {
   final Widget child;
   final Widget slideMenu;
