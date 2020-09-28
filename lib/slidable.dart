@@ -19,10 +19,6 @@ class Slidable extends StatefulWidget {
   final Function onPressed;
   /// If true, the slide menu will automatically close when the parent scrolls
   final bool closeOnScroll;
-  /// If you specify the dimensions, then the widget will behave like SizedBox()
-  final Size size;
-  /// If you specify flex, then the widget will behave like Expanded()
-  final int flex;
 
   Slidable({
     @required this.child,
@@ -33,8 +29,6 @@ class Slidable extends StatefulWidget {
     this.animationDuration = 100,
     this.onPressed,
     this.closeOnScroll = true,
-    this.size,
-    this.flex,
   });
 
   @override
@@ -116,83 +110,64 @@ class _SlidableState extends State<Slidable> with TickerProviderStateMixin {
     }
   }
 
-  Widget getParent(BuildContext context, {@required Widget child}) {
-    if (widget.flex != null)
-      return Expanded(
-        flex: widget.flex,
-        child: child,
-      );
-    else if (widget.size != null)
-      return SizedBox(
-        width: widget.size.width,
-        height: widget.size.height,
-        child: child,
-      );
-    else
-      return child;
-  }
-
   @override
   Widget build(BuildContext context) {
-    return getParent(
-      context,
-      child: LayoutBuilder(
-          builder: (BuildContext context, BoxConstraints constraints) {
-            double _maxWidth = constraints.maxWidth + constraints.maxWidth * widget.percentageBias;
+    return LayoutBuilder(
+      builder: (BuildContext context, BoxConstraints constraints) {
+        double _maxWidth = constraints.maxWidth + constraints.maxWidth * widget.percentageBias;
 
-            return GestureDetector(
-              onTap: widget.onPressed ?? () {},
-              onHorizontalDragStart: (DragStartDetails details) {
-                isAnimationOn = false;
-                animationController.reset();
-              },
-              onHorizontalDragUpdate: (DragUpdateDetails details) {
-                if (details.localPosition.dx < constraints.maxWidth &&
-                    details.localPosition.dx > 0) {
-                  setState(() {
-                    offsetPercent =
-                        details.localPosition.dx / constraints.maxWidth;
-                  });
-                }
-              },
-              onHorizontalDragEnd: (DragEndDetails details) {
-                if ((offsetPercent >= 1.0 - widget.minShiftPercent && isShifted == false) ||
-                    (offsetPercent >= widget.minShiftPercent && isShifted == true))
-                  slideController.close();
-                else
-                  slideController.open();
-              },
-              child: ClipRect(
-                clipBehavior: Clip.antiAliasWithSaveLayer,
-                child: OverflowBox(
-                  alignment: Alignment.centerRight,
-                  maxHeight: constraints.maxHeight,
-                  maxWidth: _maxWidth,
-                  child: AnimatedBuilder(
-                    animation: animationController,
-                    builder: (context, child) => Transform.translate(
-                      offset: Offset(isAnimationOn
-                          ? constraints.maxWidth * widget.percentageBias * animation.value
-                          : constraints.maxWidth * widget.percentageBias * offsetPercent, 0),
-                      child: Row(
-                        children: [
-                          Expanded(
-                            flex: 100,
-                            child: widget.child,
-                          ),
-                          Expanded(
-                            flex: (widget.percentageBias * 100).toInt(),
-                            child: widget.slideMenu,
-                          ),
-                        ],
+        return GestureDetector(
+          onTap: widget.onPressed ?? () {},
+          onHorizontalDragStart: (DragStartDetails details) {
+            isAnimationOn = false;
+            animationController.reset();
+          },
+          onHorizontalDragUpdate: (DragUpdateDetails details) {
+            if (details.localPosition.dx < constraints.maxWidth &&
+                details.localPosition.dx > 0) {
+              setState(() {
+                offsetPercent =
+                    details.localPosition.dx / constraints.maxWidth;
+              });
+            }
+          },
+          onHorizontalDragEnd: (DragEndDetails details) {
+            if ((offsetPercent >= 1.0 - widget.minShiftPercent && isShifted == false) ||
+                (offsetPercent >= widget.minShiftPercent && isShifted == true))
+              slideController.close();
+            else
+              slideController.open();
+          },
+          child: ClipRect(
+            clipBehavior: Clip.antiAliasWithSaveLayer,
+            child: OverflowBox(
+              alignment: Alignment.centerRight,
+              maxHeight: constraints.maxHeight,
+              maxWidth: _maxWidth,
+              child: AnimatedBuilder(
+                animation: animationController,
+                builder: (context, child) => Transform.translate(
+                  offset: Offset(isAnimationOn
+                      ? constraints.maxWidth * widget.percentageBias * animation.value
+                      : constraints.maxWidth * widget.percentageBias * offsetPercent, 0),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        flex: 100,
+                        child: widget.child,
                       ),
-                    ),
+                      Expanded(
+                        flex: (widget.percentageBias * 100).toInt(),
+                        child: widget.slideMenu,
+                      ),
+                    ],
                   ),
                 ),
               ),
-            );
-          }),
-    );
+            ),
+          ),
+        );
+      });
   }
 
   @override
