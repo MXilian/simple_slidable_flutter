@@ -19,6 +19,10 @@ class Slidable extends StatefulWidget {
   final Function onPressed;
   /// If true, the slide menu will automatically close when the parent scrolls
   final bool closeOnScroll;
+  /// If the widget does not respond to the parent scrollable
+  /// (this happens if the scrollable is not a direct parent),
+  /// then you should additionally give access to scrollController
+  final ScrollController scrollController;
 
   Slidable({
     @required this.child,
@@ -29,6 +33,7 @@ class Slidable extends StatefulWidget {
     this.animationDuration = 100,
     this.onPressed,
     this.closeOnScroll = true,
+    this.scrollController,
   });
 
   @override
@@ -90,7 +95,10 @@ class _SlidableState extends State<Slidable> with TickerProviderStateMixin {
 
   void addScrollListener() {
     if (widget.closeOnScroll) {
-      _scrollPosition = Scrollable.of(context)?.position;
+      if (widget.scrollController != null)
+        _scrollPosition = widget.scrollController.position;
+      else
+        _scrollPosition = Scrollable.of(context)?.position;
       if (_scrollPosition != null)
         _scrollPosition.isScrollingNotifier.addListener(scrollListener);
     }
