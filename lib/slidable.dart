@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:simple_slidable/slidable_controller.dart';
+import 'package:simple_slidable/slide_controller.dart';
 
 class Slidable extends StatefulWidget {
   final Widget child;
@@ -11,7 +11,7 @@ class Slidable extends StatefulWidget {
   /// Maximum possible slide percentage (from 0 to 1).
   /// Default value: 0.9 (i.e. 10% of the parent will remain visible at full shift)
   final double percentageBias;
-  final SlidableController controller;
+  final SlideController controller;
   /// Duration of slide animation
   final int animationDuration;
   final Function onPress;
@@ -37,7 +37,7 @@ class _SlidableState extends State<Slidable> with TickerProviderStateMixin {
   double offsetPercent = 1.0;
   bool isAnimationOn = false;
   Animation animation;
-  SlidableController slideController;
+  SlideController slideController;
   AnimationController animationController;
   ScrollPosition _scrollPosition;
 
@@ -45,7 +45,7 @@ class _SlidableState extends State<Slidable> with TickerProviderStateMixin {
 
   @override
   void initState() {
-    slideController = widget.controller ?? SlidableController();
+    slideController = widget.controller ?? SlideController();
     animationController = AnimationController(vsync: this,
         duration: Duration(milliseconds: widget.animationDuration));
     slideController.setOpen = _open;

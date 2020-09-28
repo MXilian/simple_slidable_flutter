@@ -1,4 +1,4 @@
-import 'package:simple_slidable/slidable_controller.dart';
+import 'package:simple_slidable/slide_controller.dart';
 import 'package:flutter/material.dart';
 import 'package:simple_slidable/slidable.dart';
 
@@ -7,7 +7,7 @@ void main() {
 }
 
 class SimpleSladableExample extends StatelessWidget {
-  final SlidableController controller = SlidableController();
+  final SlideController controller = SlideController();
 
   // This widget is the root of your application.
   @override
