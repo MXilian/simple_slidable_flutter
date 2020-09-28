@@ -180,7 +180,8 @@ class _SlidableState extends State<Slidable> with TickerProviderStateMixin {
 
   @override
   void dispose() {
-    animationController.dispose();
+    animationController?.dispose();
+    slideController?.dispose();
     removeScrollListener();
     super.dispose();
   }
