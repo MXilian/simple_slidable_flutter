@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:simple_slidable/slide_controller.dart';
 
+/// It is necessary to specify the size of the widget (size parameter in constructor) or flex.
+///
+/// Otherwise, the widget should be wrapped in SizedBox, Expanded, Flexible, or Container to display correctly
 class Slidable extends StatefulWidget {
   final Widget child;
-  /// Slide menu
-  final Widget actions;
+  final Widget slideMenu;
   /// Minimum shift percentage (from 0 to 1) at which the slide will be completed
   /// (default - 0.3)
   final double minShiftPercent;
@@ -12,21 +14,27 @@ class Slidable extends StatefulWidget {
   /// Default value: 0.9 (i.e. 10% of the parent will remain visible at full shift)
   final double percentageBias;
   final SlideController controller;
-  /// Duration of slide animation
+  /// Duration of slide animation (in milliseconds)
   final int animationDuration;
   final Function onPressed;
   /// If true, the slide menu will automatically close when the parent scrolls
   final bool closeOnScroll;
+  /// If you specify the dimensions, then the widget will behave like SizedBox()
+  final Size size;
+  /// If you specify flex, then the widget will behave like Expanded()
+  final int flex;
 
   Slidable({
     @required this.child,
-    @required this.actions,
+    @required this.slideMenu,
     this.minShiftPercent = 0.3,
     this.percentageBias = 0.9,
     this.controller,
     this.animationDuration = 100,
     this.onPressed,
     this.closeOnScroll = true,
+    this.size,
+    this.flex,
   });
 
   @override
@@ -108,64 +116,83 @@ class _SlidableState extends State<Slidable> with TickerProviderStateMixin {
     }
   }
 
+  Widget getParent(BuildContext context, {@required Widget child}) {
+    if (widget.flex != null)
+      return Expanded(
+        flex: widget.flex,
+        child: child,
+      );
+    else if (widget.size != null)
+      return SizedBox(
+        width: widget.size.width,
+        height: widget.size.height,
+        child: child,
+      );
+    else
+      return child;
+  }
+
   @override
   Widget build(BuildContext context) {
-    return LayoutBuilder(
-      builder: (BuildContext context, BoxConstraints constraints) {
-        double _maxWidth = constraints.maxWidth + constraints.maxWidth * widget.percentageBias;
+    return getParent(
+      context,
+      child: LayoutBuilder(
+          builder: (BuildContext context, BoxConstraints constraints) {
+            double _maxWidth = constraints.maxWidth + constraints.maxWidth * widget.percentageBias;
 
-        return GestureDetector(
-          onTap: widget.onPressed ?? () {},
-          onHorizontalDragStart: (DragStartDetails details) {
-            isAnimationOn = false;
-            animationController.reset();
-          },
-          onHorizontalDragUpdate: (DragUpdateDetails details) {
-            if (details.localPosition.dx < constraints.maxWidth &&
-                details.localPosition.dx > 0) {
-              setState(() {
-                offsetPercent =
-                    details.localPosition.dx / constraints.maxWidth;
-              });
-            }
-          },
-          onHorizontalDragEnd: (DragEndDetails details) {
-            if ((offsetPercent >= 1.0 - widget.minShiftPercent && isShifted == false) ||
-                (offsetPercent >= widget.minShiftPercent && isShifted == true))
-                slideController.close();
-            else
-                slideController.open();
-          },
-          child: ClipRect(
-            clipBehavior: Clip.antiAliasWithSaveLayer,
-            child: OverflowBox(
-              alignment: Alignment.centerRight,
-              maxHeight: constraints.maxHeight,
-              maxWidth: _maxWidth,
-              child: AnimatedBuilder(
-                animation: animationController,
-                builder: (context, child) => Transform.translate(
-                  offset: Offset(isAnimationOn
-                      ? constraints.maxWidth * widget.percentageBias * animation.value
-                      : constraints.maxWidth * widget.percentageBias * offsetPercent, 0),
-                  child: Row(
-                    children: [
-                      Expanded(
-                        flex: 100,
-                        child: widget.child,
+            return GestureDetector(
+              onTap: widget.onPressed ?? () {},
+              onHorizontalDragStart: (DragStartDetails details) {
+                isAnimationOn = false;
+                animationController.reset();
+              },
+              onHorizontalDragUpdate: (DragUpdateDetails details) {
+                if (details.localPosition.dx < constraints.maxWidth &&
+                    details.localPosition.dx > 0) {
+                  setState(() {
+                    offsetPercent =
+                        details.localPosition.dx / constraints.maxWidth;
+                  });
+                }
+              },
+              onHorizontalDragEnd: (DragEndDetails details) {
+                if ((offsetPercent >= 1.0 - widget.minShiftPercent && isShifted == false) ||
+                    (offsetPercent >= widget.minShiftPercent && isShifted == true))
+                  slideController.close();
+                else
+                  slideController.open();
+              },
+              child: ClipRect(
+                clipBehavior: Clip.antiAliasWithSaveLayer,
+                child: OverflowBox(
+                  alignment: Alignment.centerRight,
+                  maxHeight: constraints.maxHeight,
+                  maxWidth: _maxWidth,
+                  child: AnimatedBuilder(
+                    animation: animationController,
+                    builder: (context, child) => Transform.translate(
+                      offset: Offset(isAnimationOn
+                          ? constraints.maxWidth * widget.percentageBias * animation.value
+                          : constraints.maxWidth * widget.percentageBias * offsetPercent, 0),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            flex: 100,
+                            child: widget.child,
+                          ),
+                          Expanded(
+                            flex: (widget.percentageBias * 100).toInt(),
+                            child: widget.slideMenu,
+                          ),
+                        ],
                       ),
-                      Expanded(
-                        flex: (widget.percentageBias * 100).toInt(),
-                        child: widget.actions,
-                      ),
-                    ],
+                    ),
                   ),
                 ),
               ),
-            ),
-          ),
-        );
-      });
+            );
+          }),
+    );
   }
 
   @override
