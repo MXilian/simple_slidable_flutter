@@ -14,7 +14,7 @@ class Slidable extends StatefulWidget {
   final SlideController controller;
   /// Duration of slide animation
   final int animationDuration;
-  final Function onPress;
+  final Function onPressed;
   /// If true, the slide menu will automatically close when the parent scrolls
   final bool closeOnScroll;
 
@@ -25,7 +25,7 @@ class Slidable extends StatefulWidget {
     this.percentageBias = 0.9,
     this.controller,
     this.animationDuration = 100,
-    this.onPress,
+    this.onPressed,
     this.closeOnScroll = true,
   });
 
@@ -115,7 +115,7 @@ class _SlidableState extends State<Slidable> with TickerProviderStateMixin {
         double _maxWidth = constraints.maxWidth + constraints.maxWidth * widget.percentageBias;
 
         return GestureDetector(
-          onTap: widget.onPress ?? () {},
+          onTap: widget.onPressed ?? () {},
           onHorizontalDragStart: (DragStartDetails details) {
             isAnimationOn = false;
             animationController.reset();
