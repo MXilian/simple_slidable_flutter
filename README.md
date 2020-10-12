@@ -1,3 +1,5 @@
 # simple_slidable
 
-Lightweight and simple slidable widget
+Простейший slidable виджет.
+
+Внимание! Его не стоит оборачивать в контейнер с BoxConstraints - это приведет к конфликту, поскольку BoxConstraints зависят от размеров потомка, а реализация виджета основана на LayoutBuilder, зависящем от размеров родителя. 
