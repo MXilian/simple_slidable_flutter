@@ -1,3 +1,5 @@
+/// Class to store current controllers
+/// (to close all other slidables when you open one)
 class _SlideControllerManager {
   _SlideControllerManager._internal();
   static final _SlideControllerManager _instance = _SlideControllerManager._internal();
@@ -16,31 +18,52 @@ class SlideController {
       _SlideControllerManager().all.add(this);
   }
 
-  Function _toOpen, _toClose;
-  bool _shifted = false;
+  Function _slideToLeft, _slideToRight, _reset;
+  bool _shiftedToLeft = false;
+  bool _shiftedToRight = false;
+  bool _rightMenuIsDefault;
 
-  set setOpen(Function f) => _toOpen = f;
-  set setClose(Function f) => _toClose = f;
+  set setSlideToLeft(Function f) => _slideToLeft = f;
+  set setSlideToRight(Function f) => _slideToRight = f;
+  set setClose(Function f) => _reset = f;
+  /// This option determines which slide menu will open through the controller as default
+  set rightMenuIsDefault(bool value) => _rightMenuIsDefault = value;
+
+  /// Open default slide menu
+  open() => _rightMenuIsDefault ? slideToLeft() : slideToRight();
 
   /// Close slide menu
   close() {
-    _shifted = false;
-    _toClose?.call();
+    _shiftedToLeft = false;
+    _shiftedToRight = false;
+    _reset?.call();
   }
 
-  /// Open slide menu
-  open() {
-    // send close() call to other instances of SlideController()
+  /// Open right slide-menu
+  slideToLeft() {
     _SlideControllerManager().all.forEach((element) {
-      if (element.isOpened == true)
+      if (element.isOpened == true && element.hashCode != this.hashCode)
         element.close();
     });
-    _shifted = true;
-    _toOpen?.call();
+    _shiftedToLeft = true;
+    _slideToLeft?.call();
+  }
+
+  /// Open left slide-menu
+  slideToRight() {
+    _SlideControllerManager().all.forEach((element) {
+      if (element.isOpened == true && element.hashCode != this.hashCode)
+        element.close();
+    });
+    _shiftedToRight = true;
+    _slideToRight?.call();
   }
 
   /// Get current state (opened/closed)
-  bool get isOpened => _shifted;
+  bool get isOpened => _shiftedToLeft || _shiftedToRight;
+
+  bool get isShiftedToLeft => _shiftedToLeft;
+  bool get isShiftedToRight => _shiftedToRight;
 
   void dispose() {
     if (_SlideControllerManager().all.contains(this))

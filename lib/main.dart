@@ -47,7 +47,8 @@ class SimpleSladableExample extends StatelessWidget {
                             decoration: TextDecoration.none),
                       ),
                     ),
-                    slideMenu: Container(
+                    isLeftEqualsRight: true,
+                    slideMenuL: Container(
                       height: double.maxFinite,
                       color: Colors.red,
                       alignment: Alignment.center,
