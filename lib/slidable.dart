@@ -32,6 +32,10 @@ class Slidable extends StatefulWidget {
   ///  (relieves the user of having to shift the widget over a long distance
   ///  to see the slide menu)
   final double cursorOvertaking;
+  final Function onSlideCallback;
+  /// The millisecond`s count after which the slide menu will automatically close
+  /// (if 0, then the automatic closing will not occur)
+  final int millisecondsToClose;
 
   Slidable({
     @required this.child,
@@ -46,6 +50,8 @@ class Slidable extends StatefulWidget {
     this.closeOnScroll = true,
     this.scrollController,
     this.cursorOvertaking = 1.4,
+    this.onSlideCallback,
+    this.millisecondsToClose = 0,
     Key key,
   }): super(key: key);
 
@@ -125,6 +131,9 @@ class _SlidableState extends State<Slidable> with TickerProviderStateMixin {
       animationController.forward();
       // Сохраняем конечную точку анимации в качестве смещения виджета
       offsetXSaved = _maxDragFromRightToLeft;
+      widget.onSlideCallback?.call();
+      if (widget.millisecondsToClose > 0)
+        _autoClose();
   }
 
   /// Open left slide menu
@@ -142,6 +151,15 @@ class _SlidableState extends State<Slidable> with TickerProviderStateMixin {
       animationController.forward();
       // Сохраняем конечную точку анимации в качестве смещения виджета
       offsetXSaved = _maxDragFromLeftToRight;
+      widget.onSlideCallback?.call();
+      if (widget.millisecondsToClose > 0)
+        _autoClose();
+  }
+
+  Future _autoClose() async {
+    Future.delayed(Duration(milliseconds: widget.millisecondsToClose), () {
+      slideController.close();
+    });
   }
 
   /// Close slide menu
