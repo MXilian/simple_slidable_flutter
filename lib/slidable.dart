@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:simple_slidable/slide_controller.dart';
+import 'package:simple_slidable/utils.dart';
 
 // Sorry for my English :)
 
@@ -156,8 +157,10 @@ class _SlidableState extends State<Slidable> with TickerProviderStateMixin {
         _autoClose();
   }
 
-  Future _autoClose() async {
-    Future.delayed(Duration(milliseconds: widget.millisecondsToClose), () {
+  DebounceAction _debounce;
+  void _autoClose() {
+    _debounce = DebounceAction(milliseconds: widget.millisecondsToClose);
+    _debounce.run(() {
       slideController.close();
     });
   }
@@ -335,6 +338,7 @@ class _SlidableState extends State<Slidable> with TickerProviderStateMixin {
 
   @override
   void dispose() {
+    _debounce?.destroyTimer();
     animationController?.dispose();
     slideController?.dispose();
     removeScrollListener();
