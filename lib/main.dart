@@ -29,46 +29,44 @@ class SimpleSladableExample extends StatelessWidget {
                 //
                 //
                 // SLIDABLE BEGIN //////////////////////////////////////////////
-                SizedBox(
-                  width: 200,
-                  height: 100,
-                  child: Slidable(
-                    controller: controller,
-                    minShiftPercent: 0.3,
-                    percentageBias: 1,
-                    child: Container(
-                      alignment: Alignment.center,
-                      color: Colors.yellow,
-                      child: Text(
-                        'Slide me',
-                        style: TextStyle(
-                            color: Colors.black,
-                            fontSize: 18,
-                            decoration: TextDecoration.none),
-                      ),
+                Slidable(
+                  controller: controller,
+                  minShiftPercent: 0.3,
+                  percentageBias: 1,
+                  child: Container(
+                    alignment: Alignment.center,
+                    height: 100,
+                    width: 200,
+                    color: Colors.yellow,
+                    child: Text(
+                      'Slide me',
+                      style: TextStyle(
+                          color: Colors.black,
+                          fontSize: 18,
+                          decoration: TextDecoration.none),
                     ),
-                    isLeftEqualsRight: true,
-                    slideMenuL: Container(
-                      height: double.maxFinite,
-                      color: Colors.red,
-                      alignment: Alignment.center,
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          SizedBox(
-                            height: 60, width: 120,
-                            child: RaisedButton(
-                              onPressed: () {},
-                              child: Text('Button',
-                                style: TextStyle(
-                                    color: Colors.black,
-                                    fontSize: 18,
-                                    decoration: TextDecoration.none),
-                              ),
+                  ),
+                  isLeftEqualsRight: true,
+                  slideMenuL: Container(
+                    height: double.maxFinite,
+                    color: Colors.red,
+                    alignment: Alignment.center,
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        SizedBox(
+                          height: 60, width: 120,
+                          child: RaisedButton(
+                            onPressed: () {},
+                            child: Text('Button',
+                              style: TextStyle(
+                                  color: Colors.black,
+                                  fontSize: 18,
+                                  decoration: TextDecoration.none),
                             ),
                           ),
-                        ],
-                      ),
+                        ),
+                      ],
                     ),
                   ),
                 ),
