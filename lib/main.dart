@@ -8,7 +8,7 @@ void main() {
 
 class SimpleSladableExample extends StatelessWidget {
   final SlideController slideController = SlideController();
-  var _contr = TextEditingController(text: 'slide me');
+  final _contr = TextEditingController(text: 'change this text and slide me');
 
   @override
   Widget build(BuildContext context) {
@@ -39,16 +39,7 @@ class SimpleSladableExample extends StatelessWidget {
                         alignment: Alignment.center,
                         width: 200,
                         color: Colors.yellow,
-                        child: Row(mainAxisSize: MainAxisSize.max, children: [
-                          Text(
-                            'slide me',
-                            style: TextStyle(
-                                color: Colors.black,
-                                fontSize: 18,
-                                decoration: TextDecoration.none),
-                          ),
-                          Expanded(
-                              child: TextFormField(
+                        child: TextFormField(
                             controller: _contr,
                             onChanged: (_) {
                               print('onChanged');
@@ -60,8 +51,7 @@ class SimpleSladableExample extends StatelessWidget {
                                 color: Colors.black,
                                 fontSize: 18,
                                 decoration: TextDecoration.none),
-                          )),
-                        ]),
+                          ),
                       ),
                       isLeftEqualsRight: true,
                       slideMenuL: Container(
