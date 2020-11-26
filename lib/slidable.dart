@@ -4,8 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:simple_slidable/slide_controller.dart';
 import 'package:simple_slidable/utils.dart';
 
-// Sorry for my English :)
-
 class Slidable extends StatefulWidget {
   final Widget child;
 
@@ -68,11 +66,156 @@ class Slidable extends StatefulWidget {
     Key key,
   }) : super(key: key);
 
+  var _initialStreamController = StreamController<bool>();
+  StreamController<bool> get _streamController {
+    if (_initialStreamController.isClosed)
+      _initialStreamController = StreamController<bool>();
+    return _initialStreamController;
+  }
+
+  Stream<bool> get _stream => _streamController.stream;
+
+  final _debounce = DebounceAction(milliseconds: 600);
+  void generateNewState() {
+    _streamController.add(false);
+    _streamController.add(true);
+    // _debounce?.destroyTimer();
+    // _streamController.add(false);
+    // _debounce.run(() {
+    //   _streamController.add(true);
+    // });
+  }
+
+  @override
+  _SlidableMainState createState() => _SlidableMainState();
+}
+
+class _SlidableMainState extends State<Slidable> {
+  final GlobalKey _key = GlobalKey();
+
+  @override
+  void initState() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      widget._streamController.add(true);
+    });
+    super.initState();
+  }
+
+  @override
+  void dispose() {
+    widget._streamController?.close();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return StreamBuilder(
+      stream: widget._stream,
+      builder: (context, snapshot) {
+        if (snapshot == null ||
+            snapshot.data == false ||
+            _key.currentContext == null)
+          return Container(
+            key: _key,
+            child: widget.child,
+          );
+        else
+          return Stack(
+            children: [
+              Opacity(opacity: 0.0, 
+                key: _key,
+                child: widget.child,
+              ),
+              _Slidable(
+                renderBox: _key.currentContext.findRenderObject(),
+                child: widget.child,
+                slideMenuL: widget.slideMenuL,
+                slideMenuR: widget.slideMenuR,
+                isLeftEqualsRight: widget.isLeftEqualsRight,
+              ),
+            ],
+          );
+        // return _Slidable(
+        //   renderBox: _key.currentContext.findRenderObject(),
+        //   child: widget.child,
+        //   slideMenuL: widget.slideMenuL,
+        //   slideMenuR: widget.slideMenuR,
+        //   isLeftEqualsRight: widget.isLeftEqualsRight,
+        // );
+      },
+    );
+  }
+}
+
+class _Slidable extends StatefulWidget {
+  final RenderBox renderBox;
+  final Widget child;
+
+  /// Slide menu on the left
+  final Widget slideMenuL;
+
+  /// Slide menu on the right
+  final Widget slideMenuR;
+
+  /// If true, then "slideMenuL" will be equal to "slideMenuR"
+  /// (and then you can transfer one of these parameters only)
+  final bool isLeftEqualsRight;
+
+  /// Minimum shift percentage (from 0 to 1) at which the slide will be completed
+  /// (default - 0.3)
+  final double minShiftPercent;
+
+  /// Maximum possible slide percentage (from 0 to 1).
+  /// Default value: 0.9 (i.e. 10% of the parent will remain visible at full shift)
+  final double percentageBias;
+  final SlideController controller;
+
+  /// Duration of slide animation (in milliseconds)
+  final int animationDuration;
+  final Function onPressed;
+
+  /// If true, the slide menu will automatically close when the parent scrolls
+  final bool closeOnScroll;
+
+  /// If the widget does not respond to the parent scrollable
+  /// (this happens if the scrollable is not a direct parent),
+  /// then you should additionally give access to scrollController
+  final ScrollController scrollController;
+
+  /// The factor at which the widget shift is ahead of the cursor/finger shift
+  ///  (relieves the user of having to shift the widget over a long distance
+  ///  to see the slide menu)
+  final double cursorOvertaking;
+  final Function onSlideCallback;
+
+  /// The millisecond`s count after which the slide menu will automatically close
+  /// (if 0, then the automatic closing will not occur)
+  final int millisecondsToClose;
+
+  _Slidable({
+    @required this.renderBox,
+    @required this.child,
+    this.slideMenuL,
+    this.slideMenuR,
+    this.isLeftEqualsRight = false,
+    this.minShiftPercent = 0.2,
+    this.percentageBias = 0.9,
+    this.controller,
+    this.animationDuration = 200,
+    this.onPressed,
+    this.closeOnScroll = true,
+    this.scrollController,
+    this.cursorOvertaking = 1.4,
+    this.onSlideCallback,
+    this.millisecondsToClose = 0,
+    Key key,
+  }) : super(key: key);
+
   @override
   _SlidableState createState() => _SlidableState();
 }
 
-class _SlidableState extends State<Slidable> with TickerProviderStateMixin {
+class _SlidableState extends State<_Slidable> with TickerProviderStateMixin {
   SlideController slideController;
   ScrollPosition _scrollPosition;
   bool isAnimationOn = false;
@@ -106,9 +249,6 @@ class _SlidableState extends State<Slidable> with TickerProviderStateMixin {
   /// Maximum widget shift to the right
   double _maxDragFromLeftToRight = 0;
 
-  final GlobalKey _key = GlobalKey();
-  RenderBox _box;
-
   @override
   void initState() {
     slideController = widget.controller ?? SlideController();
@@ -129,8 +269,6 @@ class _SlidableState extends State<Slidable> with TickerProviderStateMixin {
     slideController.setSlideToRight = _slideToRight;
     slideController.setClose = _close;
     slideController.rightMenuIsDefault = rightMenu != null;
-    // При первом построении виджета будет вызван коллбэк afterBuild
-    WidgetsBinding.instance.addPostFrameCallback((_) => afterBuild());
     super.initState();
   }
 
@@ -139,6 +277,18 @@ class _SlidableState extends State<Slidable> with TickerProviderStateMixin {
     removeScrollListener();
     addScrollListener();
     super.didChangeDependencies();
+  }
+
+  @override
+  void didUpdateWidget(_Slidable oldWidget) {
+    if (widget.isLeftEqualsRight) {
+      leftMenu = widget.slideMenuL ?? widget.slideMenuR;
+      rightMenu = leftMenu;
+    } else {
+      leftMenu = widget.slideMenuL;
+      rightMenu = widget.slideMenuR;
+    }
+    super.didUpdateWidget(oldWidget);
   }
 
   /// Is slide-menu opened now
@@ -232,47 +382,31 @@ class _SlidableState extends State<Slidable> with TickerProviderStateMixin {
     }
   }
 
-  void afterBuild() {
-    setState(() {
-      // Сохраняем _box, из которого будут браться размеры для виджета
-      // при его перестроении
-      _box = _key.currentContext.findRenderObject();
-    });
-  }
-
   @override
   Widget build(BuildContext context) {
-    // При первом построении виджета сохраняем key.
-    // После завешения билда будет вызван коллбэк afterBuild,
-    // который извлечет из ключа RenderBox и сохранит его в _box.
-    if (_box == null) {
-      return Container(
-        key: _key,
-        child: widget.child,
-      );
-    }
-
     // Общая ширина виджета (видимая часть + слайд меню)
-    double _maxWidth = _box.size.width;
+    double _maxWidth = widget.renderBox.size.width;
     // Если левое слайд-меню не пустое, тогда увеличиваем ширину виджета
     // на размер левого слайд-меню, а также устанавливаем новые значения для
     // максимального сдвига вправо и начального смещения виджета.
     if (leftMenu != null) {
-      _maxWidth += _box.size.width * widget.percentageBias;
-      _maxDragFromLeftToRight = _box.size.width * widget.percentageBias;
+      _maxWidth += widget.renderBox.size.width * widget.percentageBias;
+      _maxDragFromLeftToRight =
+          widget.renderBox.size.width * widget.percentageBias;
       _offsetBase = 0 - _maxDragFromLeftToRight;
     }
     // Если правое слайд-меню не пустое, тогда увеличиваем ширину виджета
     // на размер правого слайд-меню, а также устанавливаем новое значение для
     // максимального сдвига вправо.
     if (rightMenu != null) {
-      _maxWidth += _box.size.width * widget.percentageBias;
-      _maxDragFromRightToLeft = 0 - _box.size.width * widget.percentageBias;
+      _maxWidth += widget.renderBox.size.width * widget.percentageBias;
+      _maxDragFromRightToLeft =
+          0 - widget.renderBox.size.width * widget.percentageBias;
     }
 
     return SizedBox(
-      height: _box.size.height,
-      width: _box.size.width,
+      height: widget.renderBox.size.height,
+      width: widget.renderBox.size.width,
       child: GestureDetector(
         behavior: HitTestBehavior.translucent,
         onTap: widget.onPressed ?? () {},
@@ -308,7 +442,8 @@ class _SlidableState extends State<Slidable> with TickerProviderStateMixin {
           // Сохраняем текущее смещение виджета в памяти
           offsetXSaved = offsetXActual;
           // Минимальный порог сдвига в пикселях
-          double minShift = _box.size.width * widget.minShiftPercent;
+          double minShift =
+              widget.renderBox.size.width * widget.minShiftPercent;
 
           // Если значение отрицательное, значит виджет сдвинут влево
           // (т.е. юзер видит правое слайд-меню)
@@ -317,7 +452,8 @@ class _SlidableState extends State<Slidable> with TickerProviderStateMixin {
             // либо правое слайд меню открыто, и юзер перетянул виджет дальше минимального порога,
             // тогда возвращаем виджет в исходное положение, а иначе - показываем правое меню
             if ((!isOpened && offsetXSaved.abs() < minShift) ||
-                (isOpened && _box.size.width + offsetXSaved >= minShift))
+                (isOpened &&
+                    widget.renderBox.size.width + offsetXSaved >= minShift))
               slideController.close();
             else
               slideController.slideToLeft();
@@ -329,7 +465,8 @@ class _SlidableState extends State<Slidable> with TickerProviderStateMixin {
             // либо левое слайд меню открыто, и юзер перетянул виджет дальше минимального порога,
             // тогда возвращаем виджет в исходное положение, а иначе - показываем левое меню
             if ((!isOpened && offsetXSaved.abs() < minShift) ||
-                (isOpened && _box.size.width - offsetXSaved >= minShift))
+                (isOpened &&
+                    widget.renderBox.size.width - offsetXSaved >= minShift))
               slideController.close();
             else
               slideController.slideToRight();
@@ -342,7 +479,7 @@ class _SlidableState extends State<Slidable> with TickerProviderStateMixin {
           // (т.е., чтобы не смещали его)
           child: OverflowBox(
             alignment: Alignment.centerLeft,
-            maxHeight: _box.size.height,
+            maxHeight: widget.renderBox.size.height,
             maxWidth: _maxWidth,
             child: AnimatedBuilder(
               animation: animationController,
@@ -385,7 +522,6 @@ class _SlidableState extends State<Slidable> with TickerProviderStateMixin {
     _debounce?.destroyTimer();
     animationController?.dispose();
     slideController?.dispose();
-    // _boxController?.close();
     removeScrollListener();
     super.dispose();
   }
