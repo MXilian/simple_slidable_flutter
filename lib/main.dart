@@ -8,7 +8,7 @@ void main() {
 
 class SimpleSladableExample extends StatelessWidget {
   final SlideController slideController = SlideController();
-  final _contr = TextEditingController(text: 'change this text and slide me');
+  final _contr = TextEditingController(text: 'Slide me' + '\n' + '(tour also can change this text)');
 
   @override
   Widget build(BuildContext context) {
