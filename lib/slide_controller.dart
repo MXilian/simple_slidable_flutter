@@ -1,8 +1,13 @@
+import 'dart:async';
+
+import 'package:simple_slidable/utils.dart';
+
 /// Class to store current controllers
 /// (to close all other slidables when you open one)
 class _SlideControllerManager {
   _SlideControllerManager._internal();
-  static final _SlideControllerManager _instance = _SlideControllerManager._internal();
+  static final _SlideControllerManager _instance =
+      _SlideControllerManager._internal();
 
   factory _SlideControllerManager() {
     return _instance;
@@ -10,7 +15,6 @@ class _SlideControllerManager {
 
   final List<SlideController> all = [];
 }
-
 
 class SlideController {
   SlideController() {
@@ -26,8 +30,26 @@ class SlideController {
   set setSlideToLeft(Function f) => _slideToLeft = f;
   set setSlideToRight(Function f) => _slideToRight = f;
   set setClose(Function f) => _reset = f;
+
   /// This option determines which slide menu will open through the controller as default
   set rightMenuIsDefault(bool value) => _rightMenuIsDefault = value;
+
+  final _debounce = DebounceAction(milliseconds: 50);
+  var _initialStreamController = StreamController<bool>();
+  StreamController<bool> get rebuildStreamController {
+    if (_initialStreamController.isClosed)
+      _initialStreamController = StreamController<bool>();
+    return _initialStreamController;
+  }
+
+  Stream<bool> get rebuildStream => rebuildStreamController.stream;
+
+  void rebuildState() {
+    _debounce?.destroyTimer();
+    _debounce.run(() {
+      rebuildStreamController.add(true);
+    });
+  }
 
   /// Open default slide menu
   open() => _rightMenuIsDefault ? slideToLeft() : slideToRight();
@@ -68,5 +90,6 @@ class SlideController {
   void dispose() {
     if (_SlideControllerManager().all.contains(this))
       _SlideControllerManager().all.remove(this);
+    _initialStreamController?.close();
   }
 }

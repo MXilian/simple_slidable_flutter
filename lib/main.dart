@@ -7,78 +7,11 @@ void main() {
 }
 
 class SimpleSladableExample extends StatelessWidget {
-  final SlideController controller = SlideController();
+  final SlideController slideController = SlideController();
   var _contr = TextEditingController(text: 'slide me');
 
   @override
   Widget build(BuildContext context) {
-    Slidable s;
-    s = Slidable(
-      controller: controller,
-      minShiftPercent: 0.3,
-      percentageBias: 1,
-      child: Container(
-        alignment: Alignment.center,
-        width: 200,
-        color: Colors.yellow,
-        child: Row(mainAxisSize: MainAxisSize.max, children: [
-          Text(
-            'slide me',
-            style: TextStyle(
-                color: Colors.black,
-                fontSize: 18,
-                decoration: TextDecoration.none),
-          ),
-          Expanded(
-              child: TextFormField(
-            controller: _contr,
-            onTap: () {
-              print('onTap');
-              s.generateNewState();
-            },
-            onChanged: (_) {
-              print('onChanged');
-              s.generateNewState();
-            },
-            onEditingComplete: () {
-              print('onEditingComplete');
-              s.generateNewState();
-            },
-            keyboardType: TextInputType.multiline,
-            maxLines: null,
-            style: TextStyle(
-                color: Colors.black,
-                fontSize: 18,
-                decoration: TextDecoration.none),
-          )),
-        ]),
-      ),
-      isLeftEqualsRight: true,
-      slideMenuL: Container(
-        height: double.maxFinite,
-        color: Colors.red,
-        alignment: Alignment.center,
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            SizedBox(
-              height: 60,
-              width: 120,
-              child: RaisedButton(
-                onPressed: () {},
-                child: Text(
-                  'Button',
-                  style: TextStyle(
-                      color: Colors.black,
-                      fontSize: 18,
-                      decoration: TextDecoration.none),
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
     return MaterialApp(
         title: 'Simple slidable demo',
         theme: ThemeData(
@@ -98,10 +31,68 @@ class SimpleSladableExample extends StatelessWidget {
                     //
                     //
                     // SLIDABLE BEGIN //////////////////////////////////////////////
-                    s,
+                    Slidable(
+                      controller: slideController,
+                      minShiftPercent: 0.3,
+                      percentageBias: 1,
+                      child: Container(
+                        alignment: Alignment.center,
+                        width: 200,
+                        color: Colors.yellow,
+                        child: Row(mainAxisSize: MainAxisSize.max, children: [
+                          Text(
+                            'slide me',
+                            style: TextStyle(
+                                color: Colors.black,
+                                fontSize: 18,
+                                decoration: TextDecoration.none),
+                          ),
+                          Expanded(
+                              child: TextFormField(
+                            controller: _contr,
+                            onChanged: (_) {
+                              print('onChanged');
+                              slideController.rebuildState();
+                            },
+                            keyboardType: TextInputType.multiline,
+                            maxLines: null,
+                            style: TextStyle(
+                                color: Colors.black,
+                                fontSize: 18,
+                                decoration: TextDecoration.none),
+                          )),
+                        ]),
+                      ),
+                      isLeftEqualsRight: true,
+                      slideMenuL: Container(
+                        height: double.maxFinite,
+                        color: Colors.red,
+                        alignment: Alignment.center,
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            SizedBox(
+                              height: 60,
+                              width: 120,
+                              child: RaisedButton(
+                                onPressed: () {},
+                                child: Text(
+                                  'Button',
+                                  style: TextStyle(
+                                      color: Colors.black,
+                                      fontSize: 18,
+                                      decoration: TextDecoration.none),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
                     // SLIDABLE END ////////////////////////////////////////////////
                     //
                     //
+
                     SizedBox(
                       height: 80,
                     ),
@@ -116,9 +107,9 @@ class SimpleSladableExample extends StatelessWidget {
                     RaisedButton(
                       color: Colors.green,
                       onPressed: () {
-                        controller.isOpened
-                            ? controller.close()
-                            : controller.open();
+                        slideController.isOpened
+                            ? slideController.close()
+                            : slideController.open();
                       },
                       child: Text(
                         'Slide controller',

@@ -1,5 +1,3 @@
-import 'dart:async';
-
 import 'package:flutter/material.dart';
 import 'package:simple_slidable/slide_controller.dart';
 import 'package:simple_slidable/utils.dart';
@@ -66,156 +64,11 @@ class Slidable extends StatefulWidget {
     Key key,
   }) : super(key: key);
 
-  var _initialStreamController = StreamController<bool>();
-  StreamController<bool> get _streamController {
-    if (_initialStreamController.isClosed)
-      _initialStreamController = StreamController<bool>();
-    return _initialStreamController;
-  }
-
-  Stream<bool> get _stream => _streamController.stream;
-
-  final _debounce = DebounceAction(milliseconds: 600);
-  void generateNewState() {
-    _streamController.add(false);
-    _streamController.add(true);
-    // _debounce?.destroyTimer();
-    // _streamController.add(false);
-    // _debounce.run(() {
-    //   _streamController.add(true);
-    // });
-  }
-
-  @override
-  _SlidableMainState createState() => _SlidableMainState();
-}
-
-class _SlidableMainState extends State<Slidable> {
-  final GlobalKey _key = GlobalKey();
-
-  @override
-  void initState() {
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      widget._streamController.add(true);
-    });
-    super.initState();
-  }
-
-  @override
-  void dispose() {
-    widget._streamController?.close();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return StreamBuilder(
-      stream: widget._stream,
-      builder: (context, snapshot) {
-        if (snapshot == null ||
-            snapshot.data == false ||
-            _key.currentContext == null)
-          return Container(
-            key: _key,
-            child: widget.child,
-          );
-        else
-          return Stack(
-            children: [
-              Opacity(opacity: 0.0, 
-                key: _key,
-                child: widget.child,
-              ),
-              _Slidable(
-                renderBox: _key.currentContext.findRenderObject(),
-                child: widget.child,
-                slideMenuL: widget.slideMenuL,
-                slideMenuR: widget.slideMenuR,
-                isLeftEqualsRight: widget.isLeftEqualsRight,
-              ),
-            ],
-          );
-        // return _Slidable(
-        //   renderBox: _key.currentContext.findRenderObject(),
-        //   child: widget.child,
-        //   slideMenuL: widget.slideMenuL,
-        //   slideMenuR: widget.slideMenuR,
-        //   isLeftEqualsRight: widget.isLeftEqualsRight,
-        // );
-      },
-    );
-  }
-}
-
-class _Slidable extends StatefulWidget {
-  final RenderBox renderBox;
-  final Widget child;
-
-  /// Slide menu on the left
-  final Widget slideMenuL;
-
-  /// Slide menu on the right
-  final Widget slideMenuR;
-
-  /// If true, then "slideMenuL" will be equal to "slideMenuR"
-  /// (and then you can transfer one of these parameters only)
-  final bool isLeftEqualsRight;
-
-  /// Minimum shift percentage (from 0 to 1) at which the slide will be completed
-  /// (default - 0.3)
-  final double minShiftPercent;
-
-  /// Maximum possible slide percentage (from 0 to 1).
-  /// Default value: 0.9 (i.e. 10% of the parent will remain visible at full shift)
-  final double percentageBias;
-  final SlideController controller;
-
-  /// Duration of slide animation (in milliseconds)
-  final int animationDuration;
-  final Function onPressed;
-
-  /// If true, the slide menu will automatically close when the parent scrolls
-  final bool closeOnScroll;
-
-  /// If the widget does not respond to the parent scrollable
-  /// (this happens if the scrollable is not a direct parent),
-  /// then you should additionally give access to scrollController
-  final ScrollController scrollController;
-
-  /// The factor at which the widget shift is ahead of the cursor/finger shift
-  ///  (relieves the user of having to shift the widget over a long distance
-  ///  to see the slide menu)
-  final double cursorOvertaking;
-  final Function onSlideCallback;
-
-  /// The millisecond`s count after which the slide menu will automatically close
-  /// (if 0, then the automatic closing will not occur)
-  final int millisecondsToClose;
-
-  _Slidable({
-    @required this.renderBox,
-    @required this.child,
-    this.slideMenuL,
-    this.slideMenuR,
-    this.isLeftEqualsRight = false,
-    this.minShiftPercent = 0.2,
-    this.percentageBias = 0.9,
-    this.controller,
-    this.animationDuration = 200,
-    this.onPressed,
-    this.closeOnScroll = true,
-    this.scrollController,
-    this.cursorOvertaking = 1.4,
-    this.onSlideCallback,
-    this.millisecondsToClose = 0,
-    Key key,
-  }) : super(key: key);
-
   @override
   _SlidableState createState() => _SlidableState();
 }
 
-class _SlidableState extends State<_Slidable> with TickerProviderStateMixin {
+class _SlidableState extends State<Slidable> with TickerProviderStateMixin {
   SlideController slideController;
   ScrollPosition _scrollPosition;
   bool isAnimationOn = false;
@@ -249,6 +102,8 @@ class _SlidableState extends State<_Slidable> with TickerProviderStateMixin {
   /// Maximum widget shift to the right
   double _maxDragFromLeftToRight = 0;
 
+  final GlobalKey _key = GlobalKey();
+
   @override
   void initState() {
     slideController = widget.controller ?? SlideController();
@@ -269,6 +124,9 @@ class _SlidableState extends State<_Slidable> with TickerProviderStateMixin {
     slideController.setSlideToRight = _slideToRight;
     slideController.setClose = _close;
     slideController.rightMenuIsDefault = rightMenu != null;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      widget.controller?.rebuildStreamController?.add(true);
+    });
     super.initState();
   }
 
@@ -280,7 +138,7 @@ class _SlidableState extends State<_Slidable> with TickerProviderStateMixin {
   }
 
   @override
-  void didUpdateWidget(_Slidable oldWidget) {
+  void didUpdateWidget(Slidable oldWidget) {
     if (widget.isLeftEqualsRight) {
       leftMenu = widget.slideMenuL ?? widget.slideMenuR;
       rightMenu = leftMenu;
@@ -384,137 +242,160 @@ class _SlidableState extends State<_Slidable> with TickerProviderStateMixin {
 
   @override
   Widget build(BuildContext context) {
-    // Общая ширина виджета (видимая часть + слайд меню)
-    double _maxWidth = widget.renderBox.size.width;
-    // Если левое слайд-меню не пустое, тогда увеличиваем ширину виджета
-    // на размер левого слайд-меню, а также устанавливаем новые значения для
-    // максимального сдвига вправо и начального смещения виджета.
-    if (leftMenu != null) {
-      _maxWidth += widget.renderBox.size.width * widget.percentageBias;
-      _maxDragFromLeftToRight =
-          widget.renderBox.size.width * widget.percentageBias;
-      _offsetBase = 0 - _maxDragFromLeftToRight;
-    }
-    // Если правое слайд-меню не пустое, тогда увеличиваем ширину виджета
-    // на размер правого слайд-меню, а также устанавливаем новое значение для
-    // максимального сдвига вправо.
-    if (rightMenu != null) {
-      _maxWidth += widget.renderBox.size.width * widget.percentageBias;
-      _maxDragFromRightToLeft =
-          0 - widget.renderBox.size.width * widget.percentageBias;
-    }
+    return StreamBuilder(
+        stream: widget.controller?.rebuildStream,
+        builder: (context, snapshot) {
+          if (snapshot == null ||
+              snapshot.data == false ||
+              _key.currentContext == null)
+            return Container(
+              key: _key,
+              child: widget.child,
+            );
+          else {
+            RenderBox renderBox = _key.currentContext.findRenderObject();
 
-    return SizedBox(
-      height: widget.renderBox.size.height,
-      width: widget.renderBox.size.width,
-      child: GestureDetector(
-        behavior: HitTestBehavior.translucent,
-        onTap: widget.onPressed ?? () {},
-        onHorizontalDragStart: (DragStartDetails details) {
-          // Деактивируем анимацию, чтобы не мешала перетаскиванию
-          isAnimationOn = false;
-          animationController.reset();
-          // Сохраняем начальную позицию курсора
-          dragStart = details.localPosition.dx;
-          // Достаем сохраненное в памяти текущее смещение виджета,
-          // чтобы относительно него вести дальнейшие вычисления
-          offsetXActual = offsetXSaved;
-        },
-        onHorizontalDragUpdate: (DragUpdateDetails details) {
-          // Определяем текущую позицию курсора
-          double dragCurrent = details.localPosition.dx;
-          // Вычисляем, на сколько пикселей произошло отклонение относительно
-          // начальной позиции курсора
-          dragDelta = dragCurrent - dragStart;
-          // Обновляем текущее смещение виджета в соответствии со смещением курсора
-          setState(() {
-            // Смещение виджета опережает смещение курсора (для удобства пользователя)
-            offsetXActual = offsetXSaved + dragDelta * widget.cursorOvertaking;
-            // Не даем виджету выйти за пределы минимального и максимального
-            // смещений, установленных ранее
-            if (offsetXActual > _maxDragFromLeftToRight)
-              offsetXActual = _maxDragFromLeftToRight;
-            if (offsetXActual < _maxDragFromRightToLeft)
-              offsetXActual = _maxDragFromRightToLeft;
-          });
-        },
-        onHorizontalDragEnd: (DragEndDetails details) {
-          // Сохраняем текущее смещение виджета в памяти
-          offsetXSaved = offsetXActual;
-          // Минимальный порог сдвига в пикселях
-          double minShift =
-              widget.renderBox.size.width * widget.minShiftPercent;
+            // Общая ширина виджета (видимая часть + слайд меню)
+            double _maxWidth = renderBox.size.width;
+            // Если левое слайд-меню не пустое, тогда увеличиваем ширину виджета
+            // на размер левого слайд-меню, а также устанавливаем новые значения для
+            // максимального сдвига вправо и начального смещения виджета.
+            if (leftMenu != null) {
+              _maxWidth += renderBox.size.width * widget.percentageBias;
+              _maxDragFromLeftToRight =
+                  renderBox.size.width * widget.percentageBias;
+              _offsetBase = 0 - _maxDragFromLeftToRight;
+            }
+            // Если правое слайд-меню не пустое, тогда увеличиваем ширину виджета
+            // на размер правого слайд-меню, а также устанавливаем новое значение для
+            // максимального сдвига вправо.
+            if (rightMenu != null) {
+              _maxWidth += renderBox.size.width * widget.percentageBias;
+              _maxDragFromRightToLeft =
+                  0 - renderBox.size.width * widget.percentageBias;
+            }
 
-          // Если значение отрицательное, значит виджет сдвинут влево
-          // (т.е. юзер видит правое слайд-меню)
-          if (offsetXActual < 0) {
-            // Если правое слайд меню закрыто, и юзер не дотянул виджет до минимального порога
-            // либо правое слайд меню открыто, и юзер перетянул виджет дальше минимального порога,
-            // тогда возвращаем виджет в исходное положение, а иначе - показываем правое меню
-            if ((!isOpened && offsetXSaved.abs() < minShift) ||
-                (isOpened &&
-                    widget.renderBox.size.width + offsetXSaved >= minShift))
-              slideController.close();
-            else
-              slideController.slideToLeft();
+            return Stack(alignment: Alignment.center, children: [
+              Opacity(
+                opacity: 0.0,
+                key: _key,
+                child: widget.child,
+              ),
+              SizedBox(
+                height: renderBox.size.height,
+                width: renderBox.size.width,
+                child: GestureDetector(
+                  behavior: HitTestBehavior.translucent,
+                  onTap: widget.onPressed ?? () {},
+                  onHorizontalDragStart: (DragStartDetails details) {
+                    // Деактивируем анимацию, чтобы не мешала перетаскиванию
+                    isAnimationOn = false;
+                    animationController.reset();
+                    // Сохраняем начальную позицию курсора
+                    dragStart = details.localPosition.dx;
+                    // Достаем сохраненное в памяти текущее смещение виджета,
+                    // чтобы относительно него вести дальнейшие вычисления
+                    offsetXActual = offsetXSaved;
+                  },
+                  onHorizontalDragUpdate: (DragUpdateDetails details) {
+                    // Определяем текущую позицию курсора
+                    double dragCurrent = details.localPosition.dx;
+                    // Вычисляем, на сколько пикселей произошло отклонение относительно
+                    // начальной позиции курсора
+                    dragDelta = dragCurrent - dragStart;
+                    // Обновляем текущее смещение виджета в соответствии со смещением курсора
+                    setState(() {
+                      // Смещение виджета опережает смещение курсора (для удобства пользователя)
+                      offsetXActual =
+                          offsetXSaved + dragDelta * widget.cursorOvertaking;
+                      // Не даем виджету выйти за пределы минимального и максимального
+                      // смещений, установленных ранее
+                      if (offsetXActual > _maxDragFromLeftToRight)
+                        offsetXActual = _maxDragFromLeftToRight;
+                      if (offsetXActual < _maxDragFromRightToLeft)
+                        offsetXActual = _maxDragFromRightToLeft;
+                    });
+                  },
+                  onHorizontalDragEnd: (DragEndDetails details) {
+                    // Сохраняем текущее смещение виджета в памяти
+                    offsetXSaved = offsetXActual;
+                    // Минимальный порог сдвига в пикселях
+                    double minShift =
+                        renderBox.size.width * widget.minShiftPercent;
 
-            // Если значение положительное, значит виджет сдвинут вправо
-            // (т.е. юзер видит левое слайд-меню)
-          } else if (offsetXActual >= 0) {
-            // Если левое слайд меню закрыто, и юзер не дотянул виджет до минимального порога
-            // либо левое слайд меню открыто, и юзер перетянул виджет дальше минимального порога,
-            // тогда возвращаем виджет в исходное положение, а иначе - показываем левое меню
-            if ((!isOpened && offsetXSaved.abs() < minShift) ||
-                (isOpened &&
-                    widget.renderBox.size.width - offsetXSaved >= minShift))
-              slideController.close();
-            else
-              slideController.slideToRight();
-          }
-        },
-        // Обрезаем виджет, чтобы был виден только child (без слайд меню)
-        child: ClipRect(
-          clipBehavior: Clip.antiAliasWithSaveLayer,
-          // Добавиаемся, чтобы обрезанные slide-меню были поверх основного контента
-          // (т.е., чтобы не смещали его)
-          child: OverflowBox(
-            alignment: Alignment.centerLeft,
-            maxHeight: widget.renderBox.size.height,
-            maxWidth: _maxWidth,
-            child: AnimatedBuilder(
-              animation: animationController,
-              builder: (context, child) => Transform.translate(
-                offset: Offset(
-                    isAnimationOn
-                        // При активной анимации смещаем виджет на значение анимации
-                        ? _offsetBase + animation.value
-                        // При неактивной анимации смещаем виджет относительно положения курсора
-                        : _offsetBase + offsetXActual,
-                    0),
-                child: Row(
-                  children: [
-                    if (leftMenu != null)
-                      Expanded(
-                        flex: (widget.percentageBias * 100).toInt(),
-                        child: leftMenu,
+                    // Если значение отрицательное, значит виджет сдвинут влево
+                    // (т.е. юзер видит правое слайд-меню)
+                    if (offsetXActual < 0) {
+                      // Если правое слайд меню закрыто, и юзер не дотянул виджет до минимального порога
+                      // либо правое слайд меню открыто, и юзер перетянул виджет дальше минимального порога,
+                      // тогда возвращаем виджет в исходное положение, а иначе - показываем правое меню
+                      if ((!isOpened && offsetXSaved.abs() < minShift) ||
+                          (isOpened &&
+                              renderBox.size.width + offsetXSaved >= minShift))
+                        slideController.close();
+                      else
+                        slideController.slideToLeft();
+
+                      // Если значение положительное, значит виджет сдвинут вправо
+                      // (т.е. юзер видит левое слайд-меню)
+                    } else if (offsetXActual >= 0) {
+                      // Если левое слайд меню закрыто, и юзер не дотянул виджет до минимального порога
+                      // либо левое слайд меню открыто, и юзер перетянул виджет дальше минимального порога,
+                      // тогда возвращаем виджет в исходное положение, а иначе - показываем левое меню
+                      if ((!isOpened && offsetXSaved.abs() < minShift) ||
+                          (isOpened &&
+                              renderBox.size.width - offsetXSaved >= minShift))
+                        slideController.close();
+                      else
+                        slideController.slideToRight();
+                    }
+                  },
+                  // Обрезаем виджет, чтобы был виден только child (без слайд меню)
+                  child: ClipRect(
+                    clipBehavior: Clip.antiAliasWithSaveLayer,
+                    // Добавиаемся, чтобы обрезанные slide-меню были поверх основного контента
+                    // (т.е., чтобы не смещали его)
+                    child: OverflowBox(
+                      alignment: Alignment.centerLeft,
+                      maxHeight: renderBox.size.height,
+                      maxWidth: _maxWidth,
+                      child: AnimatedBuilder(
+                        animation: animationController,
+                        builder: (context, child) => Transform.translate(
+                          offset: Offset(
+                              isAnimationOn
+                                  // При активной анимации смещаем виджет на значение анимации
+                                  ? _offsetBase + animation.value
+                                  // При неактивной анимации смещаем виджет относительно положения курсора
+                                  : _offsetBase + offsetXActual,
+                              0),
+                          child: Row(
+                            children: [
+                              if (leftMenu != null)
+                                Expanded(
+                                  flex: (widget.percentageBias * 100).toInt(),
+                                  child: leftMenu,
+                                ),
+                              Expanded(
+                                flex: 100,
+                                child: widget.child,
+                              ),
+                              if (rightMenu != null)
+                                Expanded(
+                                  flex: (widget.percentageBias * 100).toInt(),
+                                  child: rightMenu,
+                                ),
+                            ],
+                          ),
+                        ),
                       ),
-                    Expanded(
-                      flex: 100,
-                      child: widget.child,
                     ),
-                    if (rightMenu != null)
-                      Expanded(
-                        flex: (widget.percentageBias * 100).toInt(),
-                        child: rightMenu,
-                      ),
-                  ],
+                  ),
                 ),
               ),
-            ),
-          ),
-        ),
-      ),
-    );
+            ]);
+          }
+        });
   }
 
   @override
