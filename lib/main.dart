@@ -1,13 +1,13 @@
-import 'package:simple_slidable/slide_controller.dart';
-import 'package:flutter/material.dart';
+import 'package:simple_slidable/cubit/slidecontroller_cubit.dart';
 import 'package:simple_slidable/slidable.dart';
+import 'package:flutter/material.dart';
 
 void main() {
   runApp(SimpleSladableExample());
 }
 
 class SimpleSladableExample extends StatelessWidget {
-  final SlideController slideController = SlideController();
+  final SlideControllerCubit slideController = SlideControllerCubit();
   final _contr = TextEditingController(text: 'Slide me' + '\n' + '(tour also can change this text)');
 
   @override
@@ -53,8 +53,7 @@ class SimpleSladableExample extends StatelessWidget {
                                 decoration: TextDecoration.none),
                           ),
                       ),
-                      isLeftEqualsRight: true,
-                      slideMenuL: Container(
+                      slideMenuR: Container(
                         height: double.maxFinite,
                         color: Colors.red,
                         alignment: Alignment.center,
@@ -97,9 +96,9 @@ class SimpleSladableExample extends StatelessWidget {
                     RaisedButton(
                       color: Colors.green,
                       onPressed: () {
-                        slideController.isOpened
-                            ? slideController.close()
-                            : slideController.open();
+                        slideController.isShifted
+                            ? slideController.closeSlideMenu()
+                            : slideController.openSlideMenu();
                       },
                       child: Text(
                         'Slide controller',
