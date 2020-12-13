@@ -2,8 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:simple_slidable/slide_controller.dart';
 import 'package:simple_slidable/utils.dart';
 
-// Sorry for my English :)
-
 class Slidable extends StatefulWidget {
   final Widget child;
 
