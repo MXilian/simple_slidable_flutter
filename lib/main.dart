@@ -3,14 +3,24 @@ import 'package:flutter/material.dart';
 import 'package:simple_slidable/slidable.dart';
 
 void main() {
-  runApp(SimpleSladableExample());
+  runApp(SimpleSlidableExample());
 }
 
-class SimpleSladableExample extends StatelessWidget {
+class SimpleSlidableExample extends StatefulWidget {
+
+  @override
+  State<StatefulWidget> createState() => _SimpleSlidableExampleState();
+
+}
+
+class _SimpleSlidableExampleState extends State<SimpleSlidableExample> {
+
   final SlideController controller = SlideController();
+  double height = 80;
 
   @override
   Widget build(BuildContext context) {
+
     return MaterialApp(
       title: 'Simple slidable demo',
       theme: ThemeData(
@@ -34,9 +44,8 @@ class SimpleSladableExample extends StatelessWidget {
                   minShiftPercent: 0.3,
                   percentageBias: 1,
                   child: Container(
+                    height: height,
                     alignment: Alignment.center,
-                    height: 100,
-                    width: 200,
                     color: Colors.yellow,
                     child: Text(
                       'Slide me',
@@ -57,7 +66,12 @@ class SimpleSladableExample extends StatelessWidget {
                         SizedBox(
                           height: 60, width: 120,
                           child: RaisedButton(
-                            onPressed: () {},
+                            onPressed: () {
+                              setState(() {
+                                height == 80 ? height = 160 : height = 80;
+                              });
+                              controller.rebuild();
+                            },
                             child: Text('Button',
                               style: TextStyle(
                                   color: Colors.black,

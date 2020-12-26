@@ -23,6 +23,15 @@ class SlideController {
   bool _shiftedToRight = false;
   bool _rightMenuIsDefault;
 
+
+  Function _onRebuild;
+
+  set setOnRebuild(Function onRebuild) {
+    _onRebuild = onRebuild;
+  }
+
+  void rebuild() => _onRebuild.call();
+
   set setSlideToLeft(Function f) => _slideToLeft = f;
   set setSlideToRight(Function f) => _slideToRight = f;
   set setClose(Function f) => _reset = f;
