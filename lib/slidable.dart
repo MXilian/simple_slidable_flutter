@@ -125,9 +125,6 @@ class _SlidableState extends State<Slidable> with TickerProviderStateMixin {
     slideController.setSlideToRight = _slideToRight;
     slideController.setClose = _close;
     slideController.rightMenuIsDefault = rightMenu != null;
-    slideController.setOnRebuild = _onRebuild;
-    // При первом построении виджета будет вызван коллбэк afterBuild
-    WidgetsBinding.instance.addPostFrameCallback((_) => afterBuild());
     super.initState();
   }
 
@@ -230,19 +227,21 @@ class _SlidableState extends State<Slidable> with TickerProviderStateMixin {
   }
 
   void afterBuild() {
+    BuildContext context = _key.currentContext;
+    if (context == null)
+      return;
     setState(() {
       // Сохраняем _box, из которого будут браться размеры для виджета
       // при его перестроении
-      _box = _key.currentContext.findRenderObject();
+      _box = context.findRenderObject();
     });
-  }
-
-  void _onRebuild() {
-    WidgetsBinding.instance.addPostFrameCallback((_) => afterBuild());
   }
 
   @override
   Widget build(BuildContext context) {
+    // При перестроении виджета будет вызван afterBuild()
+    WidgetsBinding.instance.addPostFrameCallback((_) => afterBuild());
+
     // При первом построении виджета сохраняем key.
     // После завешения билда будет вызван коллбэк afterBuild,
     // который извлечет из ключа RenderBox и сохранит его в _box.

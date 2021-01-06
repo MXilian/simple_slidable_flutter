@@ -34,8 +34,9 @@ class _SimpleSlidableExampleState extends State<SimpleSlidableExample> {
             width: double.maxFinite,
             height: double.maxFinite,
             child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
+              mainAxisAlignment: MainAxisAlignment.start,
               children: [
+                SizedBox(height: 200,),
                 //
                 //
                 // SLIDABLE BEGIN //////////////////////////////////////////////
@@ -64,15 +65,15 @@ class _SimpleSlidableExampleState extends State<SimpleSlidableExample> {
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         SizedBox(
-                          height: 60, width: 120,
+                          height: 60, width: 180,
                           child: RaisedButton(
                             onPressed: () {
                               setState(() {
                                 height == 80 ? height = 160 : height = 80;
                               });
-                              controller.rebuild();
                             },
-                            child: Text('Button',
+                            child: Text('Button\n(change size)',
+                              textAlign: TextAlign.center,
                               style: TextStyle(
                                   color: Colors.black,
                                   fontSize: 18,
